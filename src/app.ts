@@ -1,7 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import userRoutes from './routes/users';
-import cardRoutes from './routes/cards';
+import routes from './routes';
 import { linkUser } from './middlewares/linkUser';
 import { errorHandler } from './middlewares/errorHandler';
 import { notFoundRoutError } from './middlewares/notFoundRoutError';
@@ -22,8 +21,7 @@ const connectDb = async () => {
 
 connectDb();
 
-app.use(linkUser, userRoutes);
-app.use(linkUser, cardRoutes);
+app.use(linkUser, routes);
 app.use(notFoundRoutError);
 app.use(errorHandler);
 

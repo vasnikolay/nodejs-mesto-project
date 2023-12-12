@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+import { constants } from 'http2';
 import CardModel from '../models/card';
 import { Card } from '../interface/card';
 import { RequestWithBody } from '../interface/entities';
@@ -19,7 +20,7 @@ export const createCard = async (req: RequestWithBody<Pick<Card, 'name' | 'link'
     const userId = req.user._id;
     const { name, link } = req.body;
     const card = await CardModel.create({ name, link, owner: userId });
-    res.status(201).json(card);
+    res.status(constants.HTTP_STATUS_CREATED).json(card);
   } catch (err) {
     next(err);
   }
@@ -32,13 +33,9 @@ export const deleteCard = async (
 ) => {
   try {
     const { cardId } = req.params;
-    const card = await CardModel.findByIdAndDelete(cardId);
+    const card = await CardModel.findByIdAndDelete(cardId).orFail(new NotFoundError('Карточка с указанным _id не найдена'));
 
-    if (!card) {
-      throw new NotFoundError('Карточка с указанным _id не найдена');
-    } else {
-      res.json({ message: `Карточка c id: ${cardId} удалена` });
-    }
+    res.json({ message: `Карточка c id: ${cardId} удалена` });
   } catch (err) {
     next(err);
   }
@@ -55,14 +52,10 @@ export const likeCard = async (
       cardId,
       // @ts-ignore временно для заглушки
       { $addToSet: { likes: req.user._id } },
-      { new: true, runValidators: true },
-    );
+      { new: true },
+    ).orFail(new NotFoundError('Карточка с указанным _id не найдена'));
 
-    if (!card) {
-      throw new NotFoundError('Карточка с указанным _id не найдена');
-    } else {
-      res.json(card);
-    }
+    res.json(card);
   } catch (err) {
     next(err);
   }
@@ -79,14 +72,10 @@ export const dislikeCard = async (
       cardId,
       // @ts-ignore временно для заглушки
       { $pull: { likes: req.user._id } },
-      { new: true, runValidators: true },
-    );
+      { new: true },
+    ).orFail(new NotFoundError('Карточка с указанным _id не найдена'));
 
-    if (!card) {
-      throw new NotFoundError('Карточка с указанным _id не найдена');
-    } else {
-      res.json(card);
-    }
+    res.json(card);
   } catch (err) {
     next(err);
   }
