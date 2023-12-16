@@ -1,3 +1,11 @@
-import { Request } from 'express';
+import { Error } from 'mongoose';
 
-export type RequestWithBody<T> = Request<{}, {}, T>
+export interface GeneralError extends Error {
+  code?: number;
+  statusCode: number;
+  errors?: Record<string, {
+    kind: string;
+    path: string;
+    properties: Record<string, unknown>;
+  }>;
+}

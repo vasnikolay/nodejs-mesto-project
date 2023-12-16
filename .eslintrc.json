@@ -41,6 +41,7 @@
     "no-underscore-dangle": ["error", { "allow": ["_id"] }],
     "no-console": "off",
     "import/prefer-default-export": "off",
-    "no-unused-vars": "off"
+    "no-unused-vars": "off",
+    "consistent-return": "off"
   }
 }

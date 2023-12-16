@@ -1,7 +1,7 @@
 import { constants } from 'http2';
 
 export class InternalServerError extends Error {
-  private statusCode: number;
+  public statusCode: number;
 
   constructor(message:string) {
     super(message);
