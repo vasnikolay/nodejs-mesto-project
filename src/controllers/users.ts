@@ -6,6 +6,7 @@ import { RequestWithBody, RequestWithParams } from '../interface/controllersArrt
 import { User } from '../interface/user';
 import { NotFoundError } from '../utils/errors/notFoundError';
 import { generateToken } from '../utils/token';
+import { UnauthorizedError } from '../utils/errors/unauthorizedError';
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -42,7 +43,9 @@ export const createUser = async (req: RequestWithBody<User>, res: Response, next
       name, about, avatar, email, password: hash,
     });
 
-    res.status(constants.HTTP_STATUS_CREATED).json(user);
+    const { password: _, ...userWithoutPassword } = user.toJSON();
+
+    res.status(constants.HTTP_STATUS_CREATED).json(userWithoutPassword);
   } catch (err) {
     next(err);
   }
@@ -90,7 +93,7 @@ export const login = async (req: RequestWithBody<Pick<User, 'email' | 'password'
     const correctPassword = await bcrypt.compare(password, user.password);
 
     if (!correctPassword) {
-      throw new NotFoundError('Неправильные почта или пароль');
+      throw new UnauthorizedError('Неправильные почта или пароль');
     }
 
     const token = generateToken(user._id);
@@ -100,7 +103,7 @@ export const login = async (req: RequestWithBody<Pick<User, 'email' | 'password'
       httpOnly: true,
       sameSite: 'none',
       secure: true,
-    });
+    }).send({ message: 'Авторизация прошла успешно' });
   } catch (err) {
     next(err);
   }

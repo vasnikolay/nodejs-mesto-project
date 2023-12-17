@@ -4,6 +4,7 @@ import CardModel from '../models/card';
 import { Card } from '../interface/card';
 import { RequestWithBody, RequestWithParams } from '../interface/controllersArrt';
 import { NotFoundError } from '../utils/errors/notFoundError';
+import { UnauthorizedError } from '../utils/errors/unauthorizedError';
 
 export const getCards = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -25,15 +26,20 @@ export const createCard = async (req: RequestWithBody<Pick<Card, 'name' | 'link'
 };
 
 export const deleteCard = async (
-  req: Request<{ cardId: string }>,
+  req: RequestWithParams<{ cardId: string }>,
   res: Response,
   next: NextFunction,
 ) => {
   try {
     const { cardId } = req.params;
-    const card = await CardModel.findByIdAndDelete(cardId).orFail(new NotFoundError('Карточка с указанным _id не найдена'));
+    const card = await CardModel.findById(cardId).orFail(new NotFoundError('Карточка с указанным _id не найдена'));
 
-    res.json({ message: `Карточка c id: ${cardId} удалена` });
+    if (card.owner.toString() !== req.user?._id) {
+      throw new UnauthorizedError('Нельзя удалять чужую карточку');
+    } else {
+      await CardModel.deleteOne({ _id: cardId });
+      res.json({ message: `Карточка c id: ${cardId} удалена` });
+    }
   } catch (err) {
     next(err);
   }
