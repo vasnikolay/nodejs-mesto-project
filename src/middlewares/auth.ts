@@ -5,13 +5,12 @@ import { AuthenticatedRequest } from '../interface/controllersArrt';
 import { secretKey } from '../utils/token';
 
 export const auth = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  const { authorization } = req.headers;
+  const token = req.cookies.jwt;
 
-  if (!authorization || !authorization.startsWith('Bearer ')) {
+  if (!token) {
     throw new UnauthorizedError('Необходима авторизация');
   }
 
-  const token = authorization.replace('Bearer ', '');
   let payload;
 
   try {

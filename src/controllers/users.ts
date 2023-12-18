@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { constants } from 'http2';
 import bcrypt from 'bcryptjs';
 import UserModel from '../models/user';
-import { RequestWithBody, RequestWithParams } from '../interface/controllersArrt';
+import { AuthenticatedRequest, RequestWithBody, RequestWithParams } from '../interface/controllersArrt';
 import { User } from '../interface/user';
 import { NotFoundError } from '../utils/errors/notFoundError';
 import { generateToken } from '../utils/token';
@@ -17,6 +17,20 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
   }
 };
 
+export const getCurrentUser = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const user = await UserModel.findById(req.user?._id).orFail(new NotFoundError('Пользователь не найден'));
+
+    res.json(user);
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getUserById = async (
   req: RequestWithParams<{ userId: string }>,
   res: Response,
@@ -24,8 +38,7 @@ export const getUserById = async (
 ) => {
   try {
     const { userId } = req.params;
-    const userIdToFind = userId === 'me' ? req.user?._id : userId;
-    const user = await UserModel.findById(userIdToFind).orFail(new NotFoundError('Пользователь не найден'));
+    const user = await UserModel.findById(userId).orFail(new NotFoundError('Пользователь не найден'));
 
     res.json(user);
   } catch (err) {
@@ -89,7 +102,7 @@ export const login = async (req: RequestWithBody<Pick<User, 'email' | 'password'
     const { email, password } = req.body;
 
     const user = await UserModel
-      .findOne({ email }).select('+password').orFail(new NotFoundError('Неправильные почта или пароль'));
+      .findOne({ email }).select('+password').orFail(new UnauthorizedError('Ошибка авторизации'));
     const correctPassword = await bcrypt.compare(password, user.password);
 
     if (!correctPassword) {

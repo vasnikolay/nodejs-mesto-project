@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { errors } from 'celebrate';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import routes from './routes';
 import { errorHandler } from './middlewares/errorHandler';
 import { notFoundRoutError } from './middlewares/notFoundRoutError';
@@ -26,14 +27,15 @@ const connectDb = async () => {
 connectDb();
 
 app.use(helmet());
+app.use(cookieParser());
 
 app.use(requestLogger);
 
 app.use(routes);
+app.use(notFoundRoutError);
 
 app.use(errorLogger);
 
-app.use(notFoundRoutError);
 app.use(errors());
 app.use(errorHandler);
 

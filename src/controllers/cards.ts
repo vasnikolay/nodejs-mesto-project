@@ -4,7 +4,7 @@ import CardModel from '../models/card';
 import { Card } from '../interface/card';
 import { RequestWithBody, RequestWithParams } from '../interface/controllersArrt';
 import { NotFoundError } from '../utils/errors/notFoundError';
-import { UnauthorizedError } from '../utils/errors/unauthorizedError';
+import { ForbiddenError } from '../utils/errors/forbiddenError';
 
 export const getCards = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -35,7 +35,7 @@ export const deleteCard = async (
     const card = await CardModel.findById(cardId).orFail(new NotFoundError('Карточка с указанным _id не найдена'));
 
     if (card.owner.toString() !== req.user?._id) {
-      throw new UnauthorizedError('Нельзя удалять чужую карточку');
+      throw new ForbiddenError('Недостаточно прав');
     } else {
       await CardModel.deleteOne({ _id: cardId });
       res.json({ message: `Карточка c id: ${cardId} удалена` });
